@@ -1,0 +1,227 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+
+void bubbleSort(int a[], int n) {
+    for (int i = 0; i < n - 1; i++) {
+        for (int j = 0; j < n - i - 1; j++) {
+            if (a[j] > a[j + 1]) {
+                int temp = a[j];
+                a[j] = a[j + 1];
+                a[j + 1] = temp;
+            }
+        }
+    }
+}
+
+void selectionSort(int a[], int n) {
+    for (int i = 0; i < n - 1; i++) {
+        int min = i;
+
+        for (int j = i + 1; j < n; j++) {
+            if (a[j] < a[min])
+                min = j;
+        }
+
+        int temp = a[i];
+        a[i] = a[min];
+        a[min] = temp;
+    }
+}
+
+void insertionSort(int a[], int n) {
+    for (int i = 1; i < n; i++) {
+        int key = a[i];
+        int j = i - 1;
+
+        while (j >= 0 && a[j] > key) {
+            a[j + 1] = a[j];
+            j--;
+        }
+
+        a[j + 1] = key;
+    }
+}
+
+void merge(int a[], int left, int mid, int right) {
+    int n1 = mid - left + 1;
+    int n2 = right - mid;
+
+    int *L = (int *)malloc(n1 * sizeof(int));
+    int *R = (int *)malloc(n2 * sizeof(int));
+
+    for (int i = 0; i < n1; i++)
+        L[i] = a[left + i];
+
+    for (int i = 0; i < n2; i++)
+        R[i] = a[mid + 1 + i];
+
+    int i = 0, j = 0, k = left;
+
+    while (i < n1 && j < n2) {
+        if (L[i] <= R[j])
+            a[k++] = L[i++];
+        else
+            a[k++] = R[j++];
+    }
+
+    while (i < n1)
+        a[k++] = L[i++];
+
+    while (j < n2)
+        a[k++] = R[j++];
+
+    free(L);
+    free(R);
+}
+
+void mergeSort(int a[], int left, int right) {
+    if (left < right) {
+        int mid = left + (right - left) / 2;
+
+        mergeSort(a, left, mid);
+        mergeSort(a, mid + 1, right);
+        merge(a, left, mid, right);
+    }
+}
+
+void quickSort(int a[], int low, int high) {
+    if (low < high) {
+        int pivot = a[high];
+        int i = low - 1;
+
+        for (int j = low; j < high; j++) {
+            if (a[j] < pivot) {
+                i++;
+
+                int temp = a[i];
+                a[i] = a[j];
+                a[j] = temp;
+            }
+        }
+
+        int temp = a[i + 1];
+        a[i + 1] = a[high];
+        a[high] = temp;
+
+        int p = i + 1;
+
+        quickSort(a, low, p - 1);
+        quickSort(a, p + 1, high);
+    }
+}
+
+void countingSort(int a[], int n) {
+    int max = a[0];
+
+    for (int i = 1; i < n; i++) {
+        if (a[i] > max)
+            max = a[i];
+    }
+
+    int *count = (int *)calloc(max + 1, sizeof(int));
+
+    for (int i = 0; i < n; i++)
+        count[a[i]]++;
+
+    int index = 0;
+
+    for (int i = 0; i <= max; i++) {
+        while (count[i] > 0) {
+            a[index++] = i;
+            count[i]--;
+        }
+    }
+
+    free(count);
+}
+
+void copyArray(int source[], int destination[], int n) {
+    for (int i = 0; i < n; i++)
+        destination[i] = source[i];
+}
+
+double getTime(void (*sortFunction)(int[], int), int a[], int n) {
+    clock_t start, end;
+
+    start = clock();
+    sortFunction(a, n);
+    end = clock();
+
+    return ((double)(end - start)) / CLOCKS_PER_SEC;
+}
+
+int main() {
+    int sizes[] = {1000, 2000, 5000, 10000, 20000};
+    int numberOfSizes = 5;
+
+    FILE *file = fopen("sorting_results.csv", "w");
+
+    if (file == NULL) {
+        printf("Error opening file.\n");
+        return 1;
+    }
+
+    fprintf(file,
+            "Size,Bubble,Selection,Insertion,Merge,Quick,Counting\n");
+
+    srand(time(NULL));
+
+    for (int s = 0; s < numberOfSizes; s++) {
+
+        int n = sizes[s];
+
+        int *original = (int *)malloc(n * sizeof(int));
+        int *a = (int *)malloc(n * sizeof(int));
+
+        for (int i = 0; i < n; i++)
+            original[i] = rand() % 1000;
+
+        copyArray(original, a, n);
+        double bubble = getTime(bubbleSort, a, n);
+
+        copyArray(original, a, n);
+        double selection = getTime(selectionSort, a, n);
+
+        copyArray(original, a, n);
+        double insertion = getTime(insertionSort, a, n);
+
+        copyArray(original, a, n);
+        clock_t start = clock();
+        mergeSort(a, 0, n - 1);
+        clock_t end = clock();
+        double merge =
+            ((double)(end - start)) / CLOCKS_PER_SEC;
+
+        copyArray(original, a, n);
+        start = clock();
+        quickSort(a, 0, n - 1);
+        end = clock();
+        double quick =
+            ((double)(end - start)) / CLOCKS_PER_SEC;
+
+        copyArray(original, a, n);
+        double counting = getTime(countingSort, a, n);
+
+        printf("\nN = %d\n", n);
+        printf("Bubble Sort    : %f seconds\n", bubble);
+        printf("Selection Sort : %f seconds\n", selection);
+        printf("Insertion Sort : %f seconds\n", insertion);
+        printf("Merge Sort     : %f seconds\n", merge);
+        printf("Quick Sort     : %f seconds\n", quick);
+        printf("Counting Sort  : %f seconds\n", counting);
+
+        fprintf(file, "%d,%f,%f,%f,%f,%f,%f\n",
+                n, bubble, selection, insertion,
+                merge, quick, counting);
+
+        free(original);
+        free(a);
+    }
+
+    fclose(file);
+
+    printf("\nResults saved in sorting_results.csv\n");
+
+    return 0;
+}
