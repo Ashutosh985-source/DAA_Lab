@@ -1,0 +1,93 @@
+#include <stdio.h>
+#include <time.h>
+
+// O(n) method
+long long powerOn(int base, int exponent)
+{
+    long long result = 1;
+
+    for (int i = 0; i < exponent; i++)
+    {
+        result = result * base;
+    }
+
+    return result;
+}
+
+// O(log n) method
+long long powerLogN(int base, int exponent)
+{
+    long long result = 1;
+
+    while (exponent > 0)
+    {
+        if (exponent % 2 == 1)
+        {
+            result = result * base;
+        }
+
+        base = base * base;
+        exponent = exponent / 2;
+    }
+
+    return result;
+}
+
+int main()
+{
+    int base = 2;
+    int exponent = 1000000;
+    int repetitions = 1000;
+
+    clock_t start, end;
+    double timeOn, timeLogN;
+
+    volatile long long result;
+
+    // -------------------------------
+    // O(n) method
+    // -------------------------------
+    start = clock();
+
+    for (int i = 0; i < repetitions; i++)
+    {
+        result = powerOn(base, exponent);
+    }
+
+    end = clock();
+
+    timeOn = ((double)(end - start)) / CLOCKS_PER_SEC;
+
+    // -------------------------------
+    // O(log n) method
+    // -------------------------------
+    start = clock();
+
+    for (int i = 0; i < repetitions; i++)
+    {
+        result = powerLogN(base, exponent);
+    }
+
+    end = clock();
+
+    timeLogN = ((double)(end - start)) / CLOCKS_PER_SEC;
+
+    // -------------------------------
+    // Display results
+    // -------------------------------
+    printf("Base = %d\n", base);
+    printf("Exponent = %d\n", exponent);
+    printf("Repetitions = %d\n\n", repetitions);
+
+    printf("O(n) Time     : %f seconds\n", timeOn);
+    printf("O(log n) Time : %f seconds\n", timeLogN);
+
+    if (timeLogN > 0)
+    {
+        printf("\nO(n) / O(log n) = %.2f times\n",
+               timeOn / timeLogN);
+    }
+
+
+    return 0;
+}
